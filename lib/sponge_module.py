@@ -40,9 +40,9 @@ async def perform_sponge(message, res_dir, sp_source):
 
         for i in range(0, len(message.content)):
             if (i%2) :
-                msg += upper[i]
-            else:
                 msg += lower[i]
+            else:
+                msg += upper[i]
 
 
     ############################

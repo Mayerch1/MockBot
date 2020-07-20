@@ -23,9 +23,9 @@ If you put yourself on the auto-mock list, kick the bot from the server and re-i
 
 |Commands||
 |---|---|
-|``` mock <user?>```  | mock a users last message | 
-| ```mockmanage [compl.]```  | put the user into the 'box of shame'
-| ```prefix <string>```  | take the last message and create the spongebob mocking meme with it|
+|``` mock <user?>```  | take the last message and create the spongebob mocking meme  | 
+| ```mockmanage [compl.]```  | manage the list of auto-mocked users (admin only)
+| ```prefix <string>```  | change the prefix of the bot|
 
 
 
