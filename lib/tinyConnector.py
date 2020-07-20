@@ -4,9 +4,6 @@ import json
 
 import copy
 
-from icalendar import Calendar
-
-
 from tinydb import TinyDB, Query
 from tinydb.operations import delete
 

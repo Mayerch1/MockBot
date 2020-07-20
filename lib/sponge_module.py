@@ -1,6 +1,5 @@
 import os
 import io
-import  requests
 import uuid
 from PIL import Image, ImageDraw, ImageFont
 

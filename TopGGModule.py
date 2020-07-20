@@ -1,6 +1,5 @@
 import os
 import dbl
-import web
 import discord
 from discord.ext import commands
 

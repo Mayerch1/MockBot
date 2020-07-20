@@ -5,7 +5,7 @@ services:
     build: .
     container_name: mockBot-discord
     volumes:
-           - ./data/Bot:/code
+           - ./:/code
   
     stdin_open: true
     tty: true

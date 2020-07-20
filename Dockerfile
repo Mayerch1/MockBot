@@ -1,8 +1,6 @@
 FROM python:3
 
-RUN apt-get update && apt-get -y install ffmpeg
-
-RUN pip3 install Pillow
+RUN pip3 install discord.py tinydb Pillow dblpy
 
 WORKDIR /code
 CMD ["python", "mockBot.py"]

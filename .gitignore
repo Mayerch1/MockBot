@@ -2,3 +2,4 @@ __pycache__/
 .vscode/
 token.txt
 topGGTocken.txt
+servers.json
