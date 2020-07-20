@@ -1,0 +1,13 @@
+# ./docker-compose.yml
+version: '3.3'
+services:
+  bot:
+    build: .
+    container_name: mockBot-discord
+    volumes:
+           - ./data/Bot:/code
+  
+    stdin_open: true
+    tty: true
+    restart: on-failure
+
