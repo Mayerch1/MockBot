@@ -9,6 +9,8 @@ Key features:
 In contrast to the 'competition' this bot uses the correct image for the meme. It does NOT only send plain text when using the commands.
 
 
+This bot is a subset of the bigger [ModBot](https://top.gg/bot/602236567574020133)
+
 ![here](readme_example.png)
 
 

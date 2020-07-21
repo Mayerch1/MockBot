@@ -31,9 +31,8 @@ async def perform_sponge(message, res_dir, sp_source):
 
     else:
         isImage = False
-
-        # make every second letter upper
-        # make every other second lower
+        # alternate the case of the content
+        # perform the conversion over entire string
         upper = message.content.upper()
         lower = message.content.lower()
         msg = ''
@@ -58,79 +57,76 @@ async def perform_sponge(message, res_dir, sp_source):
     draw = ImageDraw.Draw(img_sp)
 
     # get size of the username on the image
-    name_width = 0
-    for c in name:
-        name_width += font_type.getsize(c)[0]
+
+    msg_width = 0
+    msg_list = []
+
+    # add the fixed text (same for image and text)
+    msg_list.append('Literally no one:')
+    msg_list.append(name + ': ')
+
+    # only get size of name, as this needs to be expanded
 
 
-    msg_1 = msg_2 = msg_3 = ''
-    # insert linebreak into message, if needed
-    # break into max 3 lines, as there is no more space
-    if (not isImage):                
+    name_offset = 0
+    for c in msg_list[1]:
+        name_offset += font_type.getsize(c)[0]
+
+
+    # images do not have further text
+    msg_width = name_offset
+    if not isImage:
         img_width, _ = img_sp.size
-        msg_width = 0
+
         for c in msg:
+            # keep margin to the right
+            if msg_width > (img_width-8):
+                msg_width = name_offset
+                msg_list.append('')
+
+            msg_list[-1] += c
             msg_width += font_type.getsize(c)[0]
-            if msg_width <= img_width-8-name_width:
-                msg_1 += c
-            elif msg_width <= 2*(img_width-8-name_width):
-                msg_2 += c                    
-            else:
-                msg_3 += c
-
-    # write first line and name
-    # draw for image and text
-    draw.text(
-        xy = (0,0),
-        text='Literally no one:',
-        fill=(0,0,0),
-        font=font_type
-    )
-    draw.text(
-        xy=(0,30),
-        text=name + ':',
-        fill=(0,0,0),
-        font=font_type,
-    )
 
 
-    if(not isImage):
-        # get length of message
-        text_width_raw = 0
-        for c in msg:
-            text_width_raw += font_type.getsize(c)[0]
 
-        # print text onto image
+    for idx, line in enumerate(msg_list):
+        # first two lines have no left margin
+        x_off = 0 if idx < 2 else name_offset
+
         draw.text(
-            xy=(name_width + 8, 30),
-            text=msg_1,
-            fill=(0,0,0),
-            font=font_type,
+            xy = (x_off, idx*30),
+            text = line,
+            fill = (0,0,0),
+            font=font_type
         )
 
-        # draw 2nd line, will be empty if not needed
-        draw.text(
-            xy=(name_width + 8, 60),
-            text=msg_2,
-            fill=(0,0,0),
-            font=font_type,
-        )
 
-        # draw 3rd line, if needed
-        draw.text(
-            xy=(name_width + 8, 90),
-            text=msg_3,
-            fill=(0,0,0),
-            font=font_type,
-        )
+    if(isImage):
+        # the image is spanning vertical over title and name column
+        # the width of both must be known
 
-    elif(isImage==1):
-        img_width, _ = img_sp.size
+        title_offset = 0
+        for c in msg_list[0]:
+            title_offset += font_type.getsize(c)[0]
+
+        x_offset = title_offset if title_offset > name_offset else name_offset
+        offset = x_offset + 10, 10 # top, left margin 10
 
         mock_image = Image.open(src_image_buff)
-                    
-        offset = int(img_width/2), 10
-        size = img_width-offset[0], 100
+
+        img_width, _ = img_sp.size
+        mock_width, mock_height = mock_image.size
+
+        # get the maximum width (either mocked image or max. space usage)
+        allowed_width = img_width - offset[0] - 10 # right margin of 10
+        eff_width = allowed_width if allowed_width < mock_width else mock_width
+
+
+        allowed_height = 110 # space is 125, but top margin is 10, bottom margin is 5
+        eff_height = allowed_height if allowed_height < mock_height else mock_height
+
+
+        size = eff_width, eff_height
         mock_image.thumbnail(size, Image.ANTIALIAS)
 
         img_sp.paste(mock_image, offset)
