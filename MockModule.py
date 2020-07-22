@@ -52,7 +52,7 @@ class MockModule(commands.Cog):
                 await message.delete()
             except discord.NotFound:
                 print('msg of sp user already deleted by other command, no further action')
-            except discord.Permissions:
+            except discord.Forbidden:
                 print('No permissions to delete event-triggered sponge')
 
 
