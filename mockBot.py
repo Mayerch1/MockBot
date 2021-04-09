@@ -1,22 +1,18 @@
 
 import discord
 from discord.ext import commands
+from discord_slash import SlashContext, SlashCommand
+from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.model import SlashCommandOptionType
 
 from util.verboseErrors import VerboseErrors
 from lib.tinyConnector import TinyConnector
 
 
 
-# define before Data class
-def get_guild_based_prefix(bot, msg: discord.Message):
-    # raise exception if not on DM
-    # effectively ignoring all DMs
-    return TinyConnector.get_guild_prefix(msg.guild.id)
-
-
 token = open('token.txt', 'r').read()
-client = commands.Bot(command_prefix=get_guild_based_prefix, description='Mocking any message for you')
-
+client = commands.Bot(command_prefix='/', description='Mocking any message for you')
+slash = SlashCommand(client, sync_commands=True, override_type=True)
 
 
 PREFIX_HELP = '```prefix <string>\n\n'\
@@ -31,29 +27,13 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('-----------')
-    await client.change_presence(activity=discord.Game(name='m!mock @user'))
-
+    await client.change_presence(activity=discord.Game(name='/mock last'))
 
 
 
 @client.event
 async def on_guild_remove(guild):
     TinyConnector._delete_guild(guild.id)
-
-
-@client.command(name='prefix', help = 'change the prefix')
-@commands.guild_only()
-async def set_prefix(cmd, *prefix):
-    if not prefix or prefix[0] == 'help':
-        await cmd.send(PREFIX_HELP)
-        return
-
-
-    server = TinyConnector.get_guild(cmd.guild.id)
-    server.prefix = prefix[0]
-    TinyConnector.update_guild(server)
-
-    await cmd.send('New prefix is `{:s}`'.format(server.prefix))
 
 
 

@@ -95,20 +95,6 @@ class TinyConnector:
         return server
 
 
-    # only return the guild prefix
-    # if guild is cached use this cache (equal performance to get_guild)
-    # if NOT cached, do not convert str->Decimal (faster than copmlete conversion, but cache will not be updated)
-    @staticmethod
-    def get_guild_prefix(guild_id: int):
-
-        if guild_id in TinyConnector.cache:
-            return TinyConnector.cache[guild_id].prefix
-
-        # does nothing when guild exists in db
-        TinyConnector._init_guild(guild_id)  
-        db_json = TinyConnector.db.get(TinyConnector.q.g_id == guild_id)  # must return valid entry
-        return db_json['prefix'] # prefix is guaranteed to be in the db
-        
 
     # get the server object from db, creates new entry if not exists yet
     # guaranteed to return a object
