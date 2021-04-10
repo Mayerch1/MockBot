@@ -21,6 +21,17 @@ PREFIX_HELP = '```prefix <string>\n\n'\
 
 
 @client.event
+async def on_slash_command_error(ctx, error):
+
+    if isinstance(error, discord.ext.commands.errors.MissingPermissions):
+        await ctx.send('You do not have permission to execute this command')
+    else:
+        print(error)
+        raise error
+
+
+
+@client.event
 async def on_ready():
     # debug log
     print('Logged in as')
