@@ -17,7 +17,7 @@ class TopGG(commands.Cog):
 
         if os.path.exists('topGGToken.txt'):
             self.client = client
-            self.token = open('topGGToken.txt', 'r').readline()
+            self.token = open('topGGToken.txt', 'r').readline()[:-1]
 
             #self.dblpy = dbl.DBLClient(self.client, self.token, autopost=True)
             #self.dblpy = dbl.DBLClient(self.bot, self.token)
