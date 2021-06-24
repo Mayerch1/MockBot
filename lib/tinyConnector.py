@@ -10,7 +10,6 @@ from tinydb.operations import delete
 
 class Server:
     g_id = None  # id
-    prefix = 'm!'
     sponge_list = []
 
 
@@ -80,7 +79,6 @@ class TinyConnector:
 
 
         return dict({'g_id': guild.g_id, 
-                        'prefix': guild.prefix,
                         'sponge_list': guild.sponge_list })
 
 
@@ -89,7 +87,6 @@ class TinyConnector:
         # map json object to python class
         server = Server()
         server.g_id = db_json['g_id']
-        server.prefix = db_json.get('prefix', 'm!')
         server.sponge_list = db_json.get('sponge_list', [])
 
         return server

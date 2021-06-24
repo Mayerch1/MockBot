@@ -66,7 +66,7 @@ class MockModule(commands.Cog):
     # =====================
 
 
-    @cog_ext.cog_subcommand(base='mock', name='manage', description='manage the auto-mocked users',
+    @cog_ext.cog_slash(name='automock', description='manage the auto-mocked users',
                             options=[
                                 create_option(
                                     name='mode',
@@ -108,11 +108,10 @@ class MockModule(commands.Cog):
             await ctx.defer(hidden=True)
 
             out_str = 'sponged users: \n\t\t• '
-            # resolve all client ids to Users
-            # do not use mentions, to not alert the victims
+            # resolve all ids into mentions
+            # mentions are hidden due to using a hidden slash command
+            out_str += '\n\t• '.join(list(map(lambda x: f'<@{x}>', server.sponge_list)))
 
-            out_str += '\n\t\t• '.join(
-                list(map(lambda x: self.client.get_user(x).mention, server.sponge_list)))
             await ctx.send(out_str, hidden=True)
 
         elif user:
@@ -146,6 +145,7 @@ class MockModule(commands.Cog):
         server = TinyConnector.get_guild(ctx.guild.id)
 
         if ctx.author.id in server.sponge_list:
+            await ctx.send('You\'re on the automock list and cannot use this feature', hidden=True)
             return  # user is blacklisted
 
 
@@ -181,6 +181,7 @@ class MockModule(commands.Cog):
         server = TinyConnector.get_guild(ctx.guild.id)
 
         if ctx.author.id in server.sponge_list:
+            await ctx.send('You\'re on the automock list and cannot use this feature', hidden=True)
             return # user is blacklisted
 
 

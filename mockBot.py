@@ -11,13 +11,18 @@ from lib.tinyConnector import TinyConnector
 
 
 token = open('token.txt', 'r').read()
-client = commands.Bot(command_prefix='/', description='Mocking any message for you', help_command=None)
+
+
+intents = discord.Intents.none()
+intents.guilds = True
+intents.guild_messages = True
+
+client = commands.Bot(command_prefix='/', intents=intents, description='Mocking any message for you', help_command=None)
 slash = SlashCommand(client, sync_commands=True, override_type=True)
 
 
 PREFIX_HELP = '```prefix <string>\n\n'\
              '\t• set - the command prefix for this bot\n```'
-
 
 
 @client.event
@@ -31,7 +36,6 @@ async def on_slash_command_error(ctx, error):
 
 
 
-
 @client.command(name='help', help='Show this message')
 async def get_help(cmd, *x):
 
@@ -42,7 +46,7 @@ async def get_help(cmd, *x):
     embed.add_field(name='/mock last', value='mock the last message in this chat', inline=False)
     embed.add_field(name='/mock user', value='mock the last message of the specified user', inline=False)
     embed.add_field(name='/mock', value='use this as response to a specific message', inline=False)
-    embed.add_field(name='/mock manage', value='manage the auto-mock list', inline=False)
+    embed.add_field(name='/automock', value='manage the auto-mock list', inline=False)
 
     embed.add_field(name='\u200b', value='If you like this bot, you can leave a vote at [top.gg](https://top.gg/bot/734829435844558999)', inline=False)
 
@@ -54,8 +58,8 @@ async def get_help(cmd, *x):
                     '/help          Shows this message\n'\
                     '/mock last     mock the last message in this chat\n'\
                     '/mock user     mock the last message of the specified user\n'\
-                    '/mock          use as response to a specific message\n'\
-                    '/mock manage   manage the auto-mock list```')
+                    '/mock          use as response to a specific message\n\n'\
+                    '/automock      manage the auto-mock list```')
 
 
 
