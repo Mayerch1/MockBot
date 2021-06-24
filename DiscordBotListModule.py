@@ -6,34 +6,31 @@ import requests
 import json
 
 
-class TopGG(commands.Cog):
+class DiscordBotList(commands.Cog):
 
     def __init__(self, client):
-        self.BASE = 'https://top.gg/api'
+        self.BASE = 'https://discordbotlist.com/api/v1'
 
         self.user_agent = "MockBot (https://github.com/Mayerch1/MockBot)"
 
-        if os.path.exists('topGGToken.txt'):
+        if os.path.exists('botListToken.txt'):
             self.client = client
-            self.token = open('topGGToken.txt', 'r').readline()[:-1]
-
-            #self.dblpy = dbl.DBLClient(self.client, self.token, autopost=True)
-            #self.dblpy = dbl.DBLClient(self.bot, self.token)
-            print('Started topGG server')
+            self.token = open('botListToken.txt', 'r').readline()[:-1]
+            
+            print('Started botList server')
             self.update_stats.start()
 
         else:
-            print('Ignoring TopGG, no Token')
+            print('Ignoring botList, no Token')
         
 
     def cog_unload(self):
         self.update_stats.cancel()
 
     
-
     async def post_count(self, url, payload):
         if not self.token:
-            print('no topGGToken')
+            print('no DiscordBotList token')
             return
 
         url = self.BASE + url
@@ -49,13 +46,13 @@ class TopGG(commands.Cog):
         r = requests.post(url, data=payload, headers=headers)
 
         if r.status_code == 502:
-            print(f'TopGG Server Count Post failed with 502: Bad Gateway')
+            print(f'DBL Server Count Post failed with 502: Bad Gateway')
         elif r.status_code == 503:
-            print(f'TopGG Server Count Post failed with 503: Service Unavailable')
+            print(f'DBL Server Count Post failed with 503: Service Unavailable')
         elif r.status_code == 504:
-            print(f'TopGG Server Count Post failed with 504: Gateway Timeout')
+            print(f'DBL Server Count Post failed with 504: Gateway Timeout')
         elif r.status_code != 200:
-            print(f'TopGG Server Count Post failed with {r.status_code}: {r.content}')
+            print(f'DBL Server Count Post failed with {r.status_code}: {r.content}')
 
 
     @tasks.loop(minutes=30)
@@ -65,10 +62,9 @@ class TopGG(commands.Cog):
         server_count = len(self.client.guilds)
 
         payload = {
-            'server_count': server_count
+            'guilds': server_count
         }
-        if self.client.shard_count:
-            payload["shard_count"] = self.client.shard_count
+
         if self.client.shard_id:
             payload["shard_id"] = self.client.shard_id
 
@@ -80,6 +76,4 @@ class TopGG(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(TopGG(client))
-
-
+    client.add_cog(DiscordBotList(client))

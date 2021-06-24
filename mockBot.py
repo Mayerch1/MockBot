@@ -41,6 +41,7 @@ async def get_help(cmd, *x):
     embed.add_field(name='/help', value='show this message', inline=False)
     embed.add_field(name='/mock last', value='mock the last message in this chat', inline=False)
     embed.add_field(name='/mock user', value='mock the last message of the specified user', inline=False)
+    embed.add_field(name='/mock', value='use this as response to a specific message', inline=False)
     embed.add_field(name='/mock manage', value='manage the auto-mock list', inline=False)
 
     embed.add_field(name='\u200b', value='If you like this bot, you can leave a vote at [top.gg](https://top.gg/bot/734829435844558999)', inline=False)
@@ -48,11 +49,12 @@ async def get_help(cmd, *x):
     try:
         await cmd.send(embed=embed)
     except discord.errors.Forbidden:
-        await cmd.send('```Reminding you whenever you want\n'\
+        await cmd.send('```Mockbot Help Page\n'\
                     '\n'\
                     '/help          Shows this message\n'\
                     '/mock last     mock the last message in this chat\n'\
                     '/mock user     mock the last message of the specified user\n'\
+                    '/mock          use as response to a specific message\n'\
                     '/mock manage   manage the auto-mock list```')
 
 
@@ -79,6 +81,7 @@ async def on_guild_remove(guild):
 def main():
     client.load_extension(f'TopGGModule')
     client.load_extension(f'MockModule')
+    client.load_extension(f'DiscordBotListModule')
     client.run(token)
 
 

@@ -100,11 +100,13 @@ class MockModule(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def mock_manage_list(self, ctx, mode, user=None):
-        #print(mode)
+
         error = False
         server = TinyConnector.get_guild(ctx.guild.id)
 
         if mode == 'ls':
+            await ctx.defer(hidden=True)
+
             out_str = 'sponged users: \n\t\t• '
             # resolve all client ids to Users
             # do not use mentions, to not alert the victims
@@ -127,8 +129,6 @@ class MockModule(commands.Cog):
             await ctx.send('the selected mode requires a user to be defined', hidden=True)
 
 
-
-
     @cog_ext.cog_subcommand(base='mock', name='user', description='mock the last message of a given user',
                             options=[
                                 create_option(
@@ -146,7 +146,7 @@ class MockModule(commands.Cog):
         server = TinyConnector.get_guild(ctx.guild.id)
 
         if ctx.author.id in server.sponge_list:
-            return # user is blacklisted
+            return  # user is blacklisted
 
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
@@ -154,23 +154,22 @@ class MockModule(commands.Cog):
             await ctx.send('missing permissions', hidden=True)
             return
 
+        await ctx.defer(hidden=True)
         
         # permission is assured
         async for old_msg in ctx.channel.history(limit=250):
             # if uid of message is equals to mentioned user
             # in case of no arg: last message which is not the command
             if user == old_msg.author:
+
                 success = await perform_sponge(old_msg, Consts.res_dir, Consts.mock_file)
                 if success:
-                    await ctx.send('ok') # close the interaction as success
-                    await ctx.message.delete() # delete authored message
+                    await ctx.send('ok', hidden=True) # close the interaction as success
                     await old_msg.delete() # delete permission is assured at function beginning
 
-                return # return on succes and failure
+                return  # return on succes and failure
 
         await ctx.send('Could not find a message of the requested user', hidden=True)
-      
-
 
 
     @cog_ext.cog_subcommand(base='mock', name='last', description='mock the last message')
@@ -180,8 +179,6 @@ class MockModule(commands.Cog):
     async def mock_last(self, ctx):
 
         server = TinyConnector.get_guild(ctx.guild.id)
-
-       
 
         if ctx.author.id in server.sponge_list:
             return # user is blacklisted
@@ -194,42 +191,56 @@ class MockModule(commands.Cog):
 
         # needs deletion before iteration over history
         # otherwise the command request will be sponged
-        await ctx.send('ok') # close the interaction
-        await ctx.message.delete() # permission assured
+        await ctx.send('ok', hidden=True) # close the interaction
 
-
-        # check if the command is in response to a valid message
-        #TODO: implement reference?
-        msg = None
-        #if ctx.message.reference:
-        #    msg = ctx.message.reference
-        #    if not msg.cached_message:
-        #        channel = self.client.get_channel(msg.channel_id)
-        #        msg = await channel.fetch_message(msg.message_id)
-        #    else:
-        #        msg = msg.cached_message
-        #else:
-        #    msg = None
-
-
-        if not msg:
-            # permission is assured
-            async for old_msg in ctx.channel.history(limit=1):
-                # if uid of message is equals to mentioned user
-                # in case of no arg: last message which is not the command
-                
-                success = await perform_sponge(old_msg, Consts.res_dir, Consts.mock_file)
-                if success:
-                    await old_msg.delete() # delete permission is assured at function beginning
-                break
-           
-        else:
-            success = await perform_sponge(msg, Consts.res_dir, Consts.mock_file)
+        # permission is assured
+        async for old_msg in ctx.channel.history(limit=1):
+            # if uid of message is equals to mentioned user
+            # in case of no arg: last message which is not the command
+            
+            success = await perform_sponge(old_msg, Consts.res_dir, Consts.mock_file)
             if success:
-                await msg.delete()
+                await old_msg.delete() # delete permission is assured at function beginning
+            return
 
+        await ctx.send('failed to access message history', hidden=True)
+           
 
+    @commands.command(name='mock', help='use this as response to a specific message')
+    @commands.guild_only()
+    @commands.cooldown(rate=15, per=60, type=commands.BucketType.user)
+    @commands.max_concurrency(1, commands.BucketType.guild)
+    async def mock_response(self, cmd):
         
+        server = TinyConnector.get_guild(cmd.guild.id)
+
+        if cmd.author.id in server.sponge_list:
+            return  # user is blacklisted
+
+
+        req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
+        if not await VerboseErrors.show_missing_perms('mock', req_perms, cmd.channel):
+            await cmd.send('missing permissions', hidden=True)
+            return
+
+        # needs deletion before iteration over history
+        # otherwise the command request will be sponged
+        await cmd.message.delete()
+
+
+        if cmd.message.reference:
+           msg = cmd.message.reference
+           if not msg.cached_message:
+               channel = self.client.get_channel(msg.channel_id)
+               msg = await channel.fetch_message(msg.message_id)
+           else:
+               msg = msg.cached_message
+        else:
+           return
+    
+        success = await perform_sponge(msg, Consts.res_dir, Consts.mock_file)
+        if success:
+            await msg.delete()
 
 
 def setup(client):
