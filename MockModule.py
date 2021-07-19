@@ -107,13 +107,15 @@ class MockModule(commands.Cog):
 
             dm = await member.create_dm()
             try:
-                await dm.send('An admin put you on the automock-list. This means I\'m `mocking` all your messages.\n'\
-                               'You can ask an admin to be taken off this list if you want to prevent this.\n\n'\
-                               'If you\'re an admin yourself, use `/automock` on the server to edit the list.\n\n'\
-                               'Alternatively you can disable the blocking feature for you on this server or block me'\
-                               ' using the discord functionality. You can return at any point and re-enable this feature\n'\
-                               'Note: this is set on a per-server base',
-                               components=[action_row])
+                eb = discord.Embed(title=f'Opt out for {member.guild.name}', 
+                                description='An admin put you on the automock-list. This means I\'m `mocking` all your messages.\n'\
+                                        'You can ask an admin to be taken off this list if you want to prevent this.\n\n'\
+                                        'If you\'re an admin yourself, use `/automock` on the server to edit the list.\n\n'\
+                                        'Alternatively you can disable the blocking feature for you on this server or block me'\
+                                        ' using the discord functionality. You can return at any point and re-enable this feature\n'\
+                                        'Note: this is set on a per-server base')
+
+                await dm.send(embed = eb, components=[action_row])
 
             except discord.errors.Forbidden as e:
                 # assume interaction blocked
