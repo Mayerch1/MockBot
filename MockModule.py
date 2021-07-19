@@ -1,13 +1,14 @@
 import os
-
 import json
+from datetime import datetime, timedelta
 
 import discord
-from discord.ext import commands
-from discord_slash import cog_ext, SlashContext
-from discord_slash.utils.manage_commands import create_option, create_choice
-from discord_slash.model import SlashCommandOptionType
+from discord.ext import commands, tasks
 
+from discord_slash import cog_ext, SlashContext, ComponentContext
+from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils import manage_components
+from discord_slash.model import SlashCommandOptionType, ButtonStyle
 
 from lib.tinyConnector import TinyConnector
 from consts import Consts
@@ -15,9 +16,7 @@ from util.verboseErrors import VerboseErrors
 
 from lib.sponge_module import perform_sponge
 
-
 class MockModule(commands.Cog):
-
 
     SPM_HELP =  '```*mockmanage <mode>\n\n'\
                 'available modes\n'\
@@ -28,31 +27,147 @@ class MockModule(commands.Cog):
                 '\t• remove - alias for rm\n'\
                 '\t• list - alias for ls```'
 
+    class AutomockCool():
+        def __init__(self):
+            self.last_automock = None
+            self.last_info_msg = None
+            self.cnt = 0
 
     # =====================
     # internal functions
     # =====================
     def __init__(self, client):
         self.client = client
+        self.automock = {}
+
+
+    def set_bot_block(self, g_id, u_id, block=True):
+        
+        server = TinyConnector.get_guild(g_id)
+
+        g_id = str(g_id)
+        u_id = str(u_id)
+
+        if block:
+            if g_id not in server.black_list:
+                server.black_list[g_id] = {}
+            server.black_list[g_id][u_id] = 1
+
+        else:
+            if u_id in server.black_list[g_id]:
+                del server.black_list[g_id][u_id]
+        
+        TinyConnector.update_guild(server)
+
+
+    async def automock_info(self, member):
+        """notify the user about the auto-mock feature
+           to help reduce confusion when the bot is unknown
+        """
+
+        utcnow = datetime.utcnow()
+        g_id = member.guild.id
+        m_id = member.id
+
+        if g_id not in self.automock:
+            self.automock[g_id] = {}
+        servermock = self.automock[g_id]
+
+        if m_id not in servermock:
+            servermock[m_id] = MockModule.AutomockCool()
+
+        info = servermock[m_id]
+
+        # a long pause between automocks resets the counter
+        # this removes info msgs on long pauses between automocks
+        if info.last_automock and ((utcnow - info.last_automock) > timedelta(minutes=2)):
+            info.cnt = 0
+
+        # if the threashold for automocks has been hit without trigerring a reset
+        # the info msg is send
+        # if a info msg was send in recent time, the info msg can still be rejected
+        if info.cnt > 5 and (not info.last_info_msg or (utcnow - info.last_info_msg) > timedelta(minutes=15)):
+            info.last_info_msg = utcnow
+
+            buttons = [
+                manage_components.create_button(
+                    style=ButtonStyle.green,
+                    label='Re-enable',
+                    emoji='☑️',
+                    custom_id=str(g_id)+'_enable'
+                ),
+                manage_components.create_button(
+                    style=ButtonStyle.danger,
+                    label='Stop This',
+                    emoji='⛔',
+                    custom_id=str(g_id)+'_disable'
+                )
+            ]
+            action_row = manage_components.create_actionrow(*buttons)
+
+            dm = await member.create_dm()
+            try:
+                await dm.send('An admin put you on the automock-list. This means I\'m `mocking` all your messages.\n'\
+                               'You can ask an admin to be taken off this list if you want to prevent this.\n\n'\
+                               'If you\'re an admin yourself, use `/automock` on the server to edit the list.\n\n'\
+                               'Alternatively you can disable the blocking feature for you on this server or block me'\
+                               ' using the discord functionality. You can return at any point and re-enable this feature\n'\
+                               'Note: this is set on a per-server base',
+                               components=[action_row])
+
+            except discord.errors.Forbidden as e:
+                # assume interaction blocked
+                # when this occurres
+                self.set_bot_block(g_id, m_id, True)
+
+        # always increase cnt and update timestamp
+        info.last_automock = utcnow
+        info.cnt += 1
 
     # =====================
     # events functions
     # =====================
+
+    @commands.Cog.listener()
+    async def on_component(self, ctx: ComponentContext):
+
+        # keep as strings, as dict is str anyway
+        g_id, mode = ctx.component_id.split('_')
+        m_id = str(ctx.author_id)
+
+        if mode == 'disable':
+            self.set_bot_block(g_id, m_id, True)
+        elif mode == 'enable':
+            self.set_bot_block(g_id, m_id, False)
+        else:
+            return
+
+        await ctx.defer(edit_origin=True)
+
     @commands.Cog.listener()
     async def on_ready(self):
         print('MockModule loaded')
-
 
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.client.user:
             return
- 
-        server = TinyConnector.get_guild(message.guild.id)
 
-        if message.author.id in server.sponge_list:
-            await perform_sponge(message, Consts.res_dir, Consts.mock_file)
+        g_id = message.guild.id
+ 
+        server = TinyConnector.get_guild(g_id)
+
+        # do not trigger if user has the bot blacklisted
+        if message.author.id in server.sponge_list and\
+           str(message.author.id) not in server.black_list.get(str(g_id), {}):
+
+            success = await perform_sponge(message, Consts.res_dir, Consts.mock_file)
+
+            if not success:
+                print('failed to apply automock')
+                return
+
             try:
                 await message.delete()
             except discord.NotFound:
@@ -60,11 +175,12 @@ class MockModule(commands.Cog):
             except discord.Forbidden:
                 print('No permissions to delete event-triggered sponge')
 
+            await self.automock_info(message.author)
+
 
     # =====================
     # commands functions
     # =====================
-
 
     @cog_ext.cog_slash(name='automock', description='manage the auto-mocked users',
                             options=[
@@ -96,7 +212,6 @@ class MockModule(commands.Cog):
                                 )
                             ])
     @commands.cooldown(rate=15, per=60, type=commands.BucketType.user)
-    @commands.max_concurrency(1, commands.BucketType.guild)
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def mock_manage_list(self, ctx, mode, user=None):
@@ -138,7 +253,6 @@ class MockModule(commands.Cog):
                                 )
                             ])
     @commands.cooldown(rate=15, per=60, type=commands.BucketType.user)
-    @commands.max_concurrency(5, commands.BucketType.guild)
     @commands.guild_only()
     async def mock_user(self, ctx, user):
 
@@ -150,7 +264,7 @@ class MockModule(commands.Cog):
 
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
-        if not await VerboseErrors.show_missing_perms('mock', req_perms, ctx.channel):
+        if not await VerboseErrors.show_missing_perms('mock user', req_perms, ctx.channel):
             await ctx.send('missing permissions', hidden=True)
             return
 
@@ -174,7 +288,6 @@ class MockModule(commands.Cog):
 
     @cog_ext.cog_subcommand(base='mock', name='last', description='mock the last message')
     @commands.cooldown(rate=15, per=60, type=commands.BucketType.user)
-    @commands.max_concurrency(5, commands.BucketType.guild)
     @commands.guild_only()
     async def mock_last(self, ctx):
 
@@ -186,7 +299,7 @@ class MockModule(commands.Cog):
 
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
-        if not await VerboseErrors.show_missing_perms('mock', req_perms, ctx.channel):
+        if not await VerboseErrors.show_missing_perms('mock last', req_perms, ctx.channel):
             await ctx.send('missing permissions', hidden=True)
             return
 
@@ -210,17 +323,18 @@ class MockModule(commands.Cog):
     @commands.command(name='mock', help='use this as response to a specific message')
     @commands.guild_only()
     @commands.cooldown(rate=15, per=60, type=commands.BucketType.user)
-    @commands.max_concurrency(1, commands.BucketType.guild)
     async def mock_response(self, cmd):
+
+        if not cmd.message.reference:
+            return
         
         server = TinyConnector.get_guild(cmd.guild.id)
 
         if cmd.author.id in server.sponge_list:
             return  # user is blacklisted
 
-
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
-        if not await VerboseErrors.show_missing_perms('mock', req_perms, cmd.channel):
+        if not await VerboseErrors.show_missing_perms('mock [as response]', req_perms, cmd.channel):
             await cmd.send('missing permissions', hidden=True)
             return
 
@@ -228,17 +342,13 @@ class MockModule(commands.Cog):
         # otherwise the command request will be sponged
         await cmd.message.delete()
 
-
-        if cmd.message.reference:
-           msg = cmd.message.reference
-           if not msg.cached_message:
-               channel = self.client.get_channel(msg.channel_id)
-               msg = await channel.fetch_message(msg.message_id)
-           else:
-               msg = msg.cached_message
+        msg = cmd.message.reference  # guaranteed to be set
+        if not msg.cached_message:
+            channel = self.client.get_channel(msg.channel_id)
+            msg = await channel.fetch_message(msg.message_id)
         else:
-           return
-    
+            msg = msg.cached_message
+
         success = await perform_sponge(msg, Consts.res_dir, Consts.mock_file)
         if success:
             await msg.delete()

@@ -132,8 +132,6 @@ async def perform_sponge(message, res_dir, sp_source):
         img_sp.paste(mock_image, offset)
 
 
-
-
     with io.BytesIO() as output:
         img_sp.save(output, format='PNG')
         output.seek(0)
@@ -144,6 +142,9 @@ async def perform_sponge(message, res_dir, sp_source):
 
         # filename is necessary to trigger discord render engine
         # permission ensured by caller
-        await message.channel.send(file=discord.File(fp=output, filename='mock_{:s}_{:s}.png'.format(name, rand_suffix)))
+        try:
+            await message.channel.send(file=discord.File(fp=output, filename='mock_{:s}_{:s}.png'.format(name, rand_suffix)))
+        except discord.Forbidden:
+            return False
 
     return True

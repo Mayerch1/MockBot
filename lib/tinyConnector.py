@@ -11,7 +11,7 @@ from tinydb.operations import delete
 class Server:
     g_id = None  # id
     sponge_list = []
-
+    black_list = {}
 
 class TinyConnector:
     _current_file = 'servers.json'
@@ -56,7 +56,6 @@ class TinyConnector:
             server = TinyConnector._get_new_server(guild_id)
             TinyConnector._add_guild(server)
 
-
     @staticmethod
     def _delete_guild(guild_id: int):
         if TinyConnector.db.contains(TinyConnector.q.g_id == guild_id):
@@ -70,33 +69,31 @@ class TinyConnector:
 
     @staticmethod
     def _obj_to_json(guild: Server):
-        
-        # modifications of balance poisons cache, when not done by value
         guild = copy.deepcopy(guild)
 
-        # convert all decimals into strings
-        # (balance)
-
-
         return dict({'g_id': guild.g_id, 
-                        'sponge_list': guild.sponge_list })
-
+                     'sponge_list': guild.sponge_list,
+                     'black_list': guild.black_list })
 
     @staticmethod
     def _json_to_obj(db_json: dict()):
+
         # map json object to python class
         server = Server()
         server.g_id = db_json['g_id']
         server.sponge_list = db_json.get('sponge_list', [])
+        server.black_list = db_json.get('black_list', {})
 
         return server
-
 
 
     # get the server object from db, creates new entry if not exists yet
     # guaranteed to return a object
     @staticmethod
     def get_guild(guild_id: int):
+
+        guild_id = str(guild_id)
+
         # return cached obj
         if guild_id in TinyConnector.cache:
             # hand back copy
@@ -120,9 +117,9 @@ class TinyConnector:
     def update_guild(guild: Server):
         # update cache
         # but always update db aswell in case of program crash
-        TinyConnector.cache[guild.g_id] = guild
+        TinyConnector.cache[str(guild.g_id)] = guild
 
         # user should only supply a Server object which he retrieved from get_guild
         guild_json = TinyConnector._obj_to_json(guild)
         guild_json.pop('g_id') # get the obj->json but remove the key of the server_id as this is the primary (sort of)
-        TinyConnector.db.update(guild_json, TinyConnector.q.g_id == guild.g_id)
+        TinyConnector.db.update(guild_json, TinyConnector.q.g_id == str(guild.g_id))
