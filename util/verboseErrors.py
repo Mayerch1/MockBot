@@ -1,4 +1,5 @@
 import discord
+from discord_slash import SlashContext
 from enum import Enum
 
 
@@ -243,14 +244,14 @@ class VerboseErrors:
         missing = discord.Permissions(missing_val)
 
         out_channel = channel
-        # the checkt channel might not be a text channel
-        if not isinstance(channel, discord.TextChannel):
-            if text_alternative:
-                out_channel = text_alternative
-            else:
-                # no way to output feedback
-                return False
-        
+
+        if text_alternative:
+            out_channel = text_alternative
+
+        if not isinstance(out_channel, discord.TextChannel) and\
+            not isinstance(out_channel, SlashContext):
+            # no way to output feedback
+            return False
 
         await VerboseErrors.forbidden(cmd_name, missing, out_channel, additional_info=additional_info)
         return False

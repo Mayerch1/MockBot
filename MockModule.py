@@ -264,8 +264,7 @@ class MockModule(commands.Cog):
 
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
-        if not await VerboseErrors.show_missing_perms('mock user', req_perms, ctx.channel):
-            await ctx.send('missing permissions', hidden=True)
+        if not await VerboseErrors.show_missing_perms('mock user', req_perms, ctx.channel, text_alternative=ctx):
             return
 
         await ctx.defer(hidden=True)
@@ -299,8 +298,7 @@ class MockModule(commands.Cog):
 
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
-        if not await VerboseErrors.show_missing_perms('mock last', req_perms, ctx.channel):
-            await ctx.send('missing permissions', hidden=True)
+        if not await VerboseErrors.show_missing_perms('mock last', req_perms, ctx.channel, text_alternative=ctx):
             return
 
         # needs deletion before iteration over history
