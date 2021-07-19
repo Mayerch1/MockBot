@@ -86,7 +86,7 @@ class MockModule(commands.Cog):
         # if the threashold for automocks has been hit without trigerring a reset
         # the info msg is send
         # if a info msg was send in recent time, the info msg can still be rejected
-        if info.cnt > 5 and (not info.last_info_msg or (utcnow - info.last_info_msg) > timedelta(minutes=15)):
+        if info.cnt >= 5 and (not info.last_info_msg or (utcnow - info.last_info_msg) > timedelta(minutes=15)):
             info.last_info_msg = utcnow
 
             buttons = [
