@@ -41,6 +41,28 @@ class MockModule(commands.Cog):
         self.automock = {}
 
 
+    def _get_actionrow(self, guild_id, opted_out=False):
+        
+        buttons = [
+                manage_components.create_button(
+                    style=ButtonStyle.green,
+                    label='Re-enable',
+                    emoji='☑️',
+                    custom_id=str(guild_id)+'_enable',
+                    disabled=(not opted_out)
+                ),
+                manage_components.create_button(
+                    style=ButtonStyle.danger,
+                    label='Stop This',
+                    emoji='⛔',
+                    custom_id=str(guild_id)+'_disable',
+                    disabled=(opted_out)
+                )
+            ]
+
+        return manage_components.create_actionrow(*buttons)
+
+
     def set_bot_block(self, g_id, u_id, block=True):
         
         server = TinyConnector.get_guild(g_id)
@@ -89,22 +111,6 @@ class MockModule(commands.Cog):
         if info.cnt >= 5 and (not info.last_info_msg or (utcnow - info.last_info_msg) > timedelta(minutes=15)):
             info.last_info_msg = utcnow
 
-            buttons = [
-                manage_components.create_button(
-                    style=ButtonStyle.green,
-                    label='Re-enable',
-                    emoji='☑️',
-                    custom_id=str(g_id)+'_enable'
-                ),
-                manage_components.create_button(
-                    style=ButtonStyle.danger,
-                    label='Stop This',
-                    emoji='⛔',
-                    custom_id=str(g_id)+'_disable'
-                )
-            ]
-            action_row = manage_components.create_actionrow(*buttons)
-
             dm = await member.create_dm()
             try:
                 eb = discord.Embed(title=f'Opt out for {member.guild.name}', 
@@ -115,6 +121,9 @@ class MockModule(commands.Cog):
                                         ' using the discord functionality. You can return at any point and re-enable this feature\n'\
                                         'Note: this is set on a per-server base')
 
+                # assume user is not opted-out
+                # otherswise this method couldn't even be triggered in the first place
+                action_row = self._get_actionrow(g_id, opted_out=False)
                 await dm.send(embed = eb, components=[action_row])
 
             except discord.errors.Forbidden as e:
@@ -139,12 +148,17 @@ class MockModule(commands.Cog):
 
         if mode == 'disable':
             self.set_bot_block(g_id, m_id, True)
+            action_row = self._get_actionrow(g_id, opted_out=True)
+
         elif mode == 'enable':
             self.set_bot_block(g_id, m_id, False)
+            action_row = self._get_actionrow(g_id, opted_out=False)
         else:
             return
 
-        await ctx.defer(edit_origin=True)
+        await ctx.edit_origin(components=[action_row])
+
+        #await ctx.defer(edit_origin=True)
 
     @commands.Cog.listener()
     async def on_ready(self):
