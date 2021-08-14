@@ -1,13 +1,12 @@
-
 import discord
 from discord.ext import commands
 from discord_slash import SlashContext, SlashCommand
+from discord_slash.context import MenuContext
 from discord_slash.utils.manage_commands import create_option, create_choice
-from discord_slash.model import SlashCommandOptionType
+from discord_slash.model import SlashCommandOptionType, ContextMenuType
 
 from util.verboseErrors import VerboseErrors
 from lib.tinyConnector import TinyConnector
-
 
 
 token = open('token.txt', 'r').read()
@@ -30,6 +29,8 @@ async def on_slash_command_error(ctx, error):
 
     if isinstance(error, discord.ext.commands.errors.MissingPermissions):
         await ctx.send('You do not have permission to execute this command')
+    elif isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
+        await ctx.send('This command is only to be used on servers')
     else:
         print(error)
         raise error
@@ -50,9 +51,6 @@ async def get_help(ctx):
 
     # direct slash response is guaranteed to have permissions
     await ctx.send(embed=embed)
-    
-
-
 
 
 @client.event
@@ -65,11 +63,9 @@ async def on_ready():
     await client.change_presence(activity=discord.Game(name='/mock last'))
 
 
-
 @client.event
 async def on_guild_remove(guild):
     TinyConnector._delete_guild(guild.id)
-
 
 
 def main():

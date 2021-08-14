@@ -6,9 +6,10 @@ import discord
 from discord.ext import commands, tasks
 
 from discord_slash import cog_ext, SlashContext, ComponentContext
+from discord_slash.context import MenuContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 from discord_slash.utils import manage_components
-from discord_slash.model import SlashCommandOptionType, ButtonStyle
+from discord_slash.model import SlashCommandOptionType, ButtonStyle, ContextMenuType
 
 from lib.tinyConnector import TinyConnector
 from consts import Consts
@@ -332,41 +333,31 @@ class MockModule(commands.Cog):
             return
 
         await ctx.send('failed to access message history', hidden=True)
-           
 
-    @commands.command(name='mock', help='use this as response to a specific message')
+
+    @cog_ext.cog_context_menu(name='mock_message', target=ContextMenuType.MESSAGE)
     @commands.guild_only()
     @commands.cooldown(rate=15, per=60, type=commands.BucketType.user)
-    async def mock_response(self, cmd):
+    async def mock_response(self, ctx: MenuContext):
 
-        if not cmd.message.reference:
-            return
-        
-        server = TinyConnector.get_guild(cmd.guild.id)
+        server = TinyConnector.get_guild(ctx.guild.id)
 
-        if cmd.author.id in server.sponge_list:
+        if ctx.author.id in server.sponge_list:
+            await ctx.send('You\'re on the automock list and cannot use this feature', hidden=True)
             return  # user is blacklisted
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
-        if not await VerboseErrors.show_missing_perms('mock [as response]', req_perms, cmd.channel):
-            await cmd.send('missing permissions', hidden=True)
+        if not await VerboseErrors.show_missing_perms('mock_message [context menu]', req_perms, ctx.channel):
+            await ctx.send('missing permissions', hidden=True)
             return
 
-        # needs deletion before iteration over history
-        # otherwise the command request will be sponged
-        await cmd.message.delete()
+        await ctx.send('ok', hidden=True)
 
-        msg = cmd.message.reference  # guaranteed to be set
-        if not msg.cached_message:
-            channel = self.client.get_channel(msg.channel_id)
-            msg = await channel.fetch_message(msg.message_id)
-        else:
-            msg = msg.cached_message
-
+        msg = ctx.target_message  # guaranteed to be set
         success = await perform_sponge(msg, Consts.res_dir, Consts.mock_file)
+
         if success:
             await msg.delete()
-
 
 def setup(client):
     client.add_cog(MockModule(client))
