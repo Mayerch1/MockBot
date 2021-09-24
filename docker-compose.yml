@@ -4,10 +4,13 @@ services:
   bot:
     build: .
     container_name: mockBot-discord
-    volumes:
-           - ./:/code
-  
     stdin_open: true
     tty: true
+
+    environment:
+      - BOT_TOKEN
+
+    volumes:
+      - ./token:/code/tokens
     restart: always
 

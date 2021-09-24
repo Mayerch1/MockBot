@@ -1,3 +1,5 @@
+import os
+
 import discord
 from discord.ext import commands
 from discord_slash import SlashContext, SlashCommand
@@ -9,7 +11,7 @@ from util.verboseErrors import VerboseErrors
 from lib.tinyConnector import TinyConnector
 
 
-token = open('token.txt', 'r').read()
+token = os.getenv('BOT_TOKEN')
 
 
 intents = discord.Intents.none()
@@ -17,7 +19,7 @@ intents.guilds = True
 intents.guild_messages = True
 
 client = commands.Bot(command_prefix='!', intents=intents, description='Mocking any message for you', help_command=None)
-slash = SlashCommand(client, sync_commands=True, override_type=True)
+slash = SlashCommand(client, sync_commands=True)
 
 
 PREFIX_HELP = '```prefix <string>\n\n'\
@@ -69,9 +71,8 @@ async def on_guild_remove(guild):
 
 
 def main():
-    client.load_extension(f'TopGGModule')
     client.load_extension(f'MockModule')
-    client.load_extension(f'DiscordBotListModule')
+    client.load_extension(f'ServerCountPost')
     client.run(token)
 
 
