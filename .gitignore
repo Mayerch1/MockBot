@@ -1,6 +1,6 @@
 __pycache__/
 .env
 .vscode/
+tokens/**
 token.txt
-topGGTocken.txt
 servers.json
