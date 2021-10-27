@@ -109,7 +109,7 @@ class MockModule(commands.Cog):
         # if the threashold for automocks has been hit without trigerring a reset
         # the info msg is send
         # if a info msg was send in recent time, the info msg can still be rejected
-        if info.cnt >= 5 and (not info.last_info_msg or (utcnow - info.last_info_msg) > timedelta(minutes=15)):
+        if info.cnt >= 4 and (not info.last_info_msg or (utcnow - info.last_info_msg) > timedelta(minutes=15)):
             info.last_info_msg = utcnow
 
             dm = await member.create_dm()
@@ -118,8 +118,7 @@ class MockModule(commands.Cog):
                                 description='An admin put you on the automock-list. This means I\'m `mocking` all your messages.\n'\
                                         'You can ask an admin to be taken off this list if you want to prevent this.\n\n'\
                                         'If you\'re an admin yourself, use `/automock` on the server to edit the list.\n\n'\
-                                        'Alternatively you can disable the blocking feature for you on this server or block me'\
-                                        ' using the discord functionality. You can return at any point and re-enable this feature\n'\
+                                        'Use the buttons below, to prevent me from automatically modifying your messages. You can return at any point and re-enable this feature.\n'\
                                         'Note: this is set on a per-server base')
 
                 # assume user is not opted-out
@@ -275,11 +274,6 @@ class MockModule(commands.Cog):
 
         server = TinyConnector.get_guild(ctx.guild.id)
 
-        if ctx.author.id in server.sponge_list:
-            await ctx.send('You\'re on the automock list and cannot use this feature', hidden=True)
-            return  # user is blacklisted
-
-
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
         if not await VerboseErrors.show_missing_perms('mock user', req_perms, ctx.channel, text_alternative=ctx):
             return
@@ -309,11 +303,6 @@ class MockModule(commands.Cog):
 
         server = TinyConnector.get_guild(ctx.guild.id)
 
-        if ctx.author.id in server.sponge_list:
-            await ctx.send('You\'re on the automock list and cannot use this feature', hidden=True)
-            return # user is blacklisted
-
-
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
         if not await VerboseErrors.show_missing_perms('mock last', req_perms, ctx.channel, text_alternative=ctx):
             return
@@ -341,10 +330,6 @@ class MockModule(commands.Cog):
     async def mock_response(self, ctx: MenuContext):
 
         server = TinyConnector.get_guild(ctx.guild.id)
-
-        if ctx.author.id in server.sponge_list:
-            await ctx.send('You\'re on the automock list and cannot use this feature', hidden=True)
-            return  # user is blacklisted
 
         req_perms = discord.Permissions(manage_messages=True, attach_files=True, read_message_history=True)
         if not await VerboseErrors.show_missing_perms('mock_message [context menu]', req_perms, ctx.channel):
