@@ -1,7 +1,7 @@
 Privacy Notice for **MockBot**
 
 Please note that this bot is **not** a service provided by or affiliated with Discord Inc.
-The *Discord Privacy notice* has no implications on this notice and vice versa. Both documents coexists independently.
+This notice has no implications on the *Discord Privacy notice*. Both documents coexists independently.
 
 __**Implicite data collection**__
 During *normal* operation, this service will not persist any user information.
