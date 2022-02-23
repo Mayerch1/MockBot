@@ -9,6 +9,7 @@ services:
 
     environment:
       - BOT_TOKEN
+      - RES_BASE
 
     volumes:
       - ./tokens:/code/tokens
