@@ -12,5 +12,6 @@ services:
 
     volumes:
       - ./tokens:/code/tokens
+      - ./logs:/code/logs
     restart: always
 
