@@ -139,7 +139,7 @@ class MockModule(discord.Cog):
     # command functions
     # =====================
 
-    @discord.commands.user_command(name='automock')
+    @discord.commands.user_command(name='automock', description='toggle the automock status for this user')
     async def automock_context(self, ctx: discord.ApplicationContext, member: discord.Member):
         status = TinyConnector.get_member_status(member.guild.id, member.id)
 
@@ -152,7 +152,7 @@ class MockModule(discord.Cog):
 
 
 
-    @discord.commands.message_command(name='mock_message')
+    @discord.commands.message_command(name='mock_message', description='mock the selected message')
     async def mock_context(self, ctx: discord.ApplicationContext, message: discord.Message):
         await self.mock_message(ctx, message)
 

@@ -4,3 +4,4 @@ __pycache__/
 tokens/**
 token.txt
 servers.json
+logs/**
