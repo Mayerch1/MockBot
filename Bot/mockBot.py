@@ -21,8 +21,6 @@ dc_logger.setLevel(logging.WARNING) # discord lib
 log = logging.getLogger('MockBot')
 log.setLevel(logging.DEBUG) # own code
 
-log = logging.getLogger('ext.help')
-log.setLevel(logging.DEBUG) # own code
 
 dc_logger.addHandler(handler)
 log.addHandler(handler)
