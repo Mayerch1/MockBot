@@ -1,9 +1,10 @@
-discord.py 
-discord-py-slash-command 
 tinydb 
 Pillow 
-dblpy 
 Flask 
 waitress 
 web.py 
 requests_html
+aiodns
+brotlipy
+cchardet
+orjson

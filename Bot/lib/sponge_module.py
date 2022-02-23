@@ -1,11 +1,11 @@
 import os
 import io
 import uuid
+import discord
 from PIL import Image, ImageDraw, ImageFont
 
-import discord
 
-async def perform_sponge(message, res_dir, sp_source):
+async def perform_sponge(ctx: discord.ApplicationContext, message: discord.Message, res_dir, sp_source):
     """perform the spongebob mocking on a message
        function does generate image with mocking text and send to messages channel
        Does NOT delete 'message' by itself
@@ -47,9 +47,7 @@ async def perform_sponge(message, res_dir, sp_source):
     ############################
     #############################
 
-
     name = message.author.display_name
-    
 
     # open image and create font
     img_sp = Image.open(res_dir + '/' + sp_source)
@@ -139,11 +137,15 @@ async def perform_sponge(message, res_dir, sp_source):
         # to not confuse users with equal file names
         # they do not need to be unique from the technical side
         rand_suffix = str(uuid.uuid4())[-7:] 
+        file = discord.File(fp=output, filename='mock_{:s}_{:s}.png'.format(name, rand_suffix))
 
         # filename is necessary to trigger discord render engine
         # permission ensured by caller
         try:
-            await message.channel.send(file=discord.File(fp=output, filename='mock_{:s}_{:s}.png'.format(name, rand_suffix)))
+            if ctx:
+                await ctx.respond(file=file)
+            else:
+                await message.channel.send(file=file)
         except discord.Forbidden:
             return False
 

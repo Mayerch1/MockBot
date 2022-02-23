@@ -1,5 +1,4 @@
 import discord
-from discord_slash import SlashContext
 from enum import Enum
 
 
@@ -42,7 +41,10 @@ class VerboseErrors:
 
         # even the 'embed' permission might be missing
         try:
-            await channel.send(embed=embed)
+            if isinstance(channel, discord.ApplicationContext):
+                await channel.respond(embed=embed)
+            else:
+                await channel.send(embed=embed)
         except discord.errors.Forbidden:
 
             err_str = 'I need following permissions to perform this action: '
@@ -71,23 +73,7 @@ class VerboseErrors:
                 me = me_override
             else:
                 me = channel.guild.me
-
-
-            # first check overrides for user
-            # as they have the lowest priority
-            role_list =[me] +  me.roles
-
-            for role in role_list:
-                # role can be a user_obj aswell
-
-                ovr = channel.overwrites_for(role)
-                allow, deny = ovr.pair()
-
-                # all values with '1' need to be 0 in granted, values with '0' should stay
-                # -> (y & (~x)) achieves this logic
-                granted_perms.value = granted_perms.value & (~deny.value)
-                # simple or enough to allow
-                granted_perms.value = granted_perms.value | allow.value
+            granted_perms = channel.permissions_for(me)
 
         return granted_perms
 
@@ -249,7 +235,7 @@ class VerboseErrors:
             out_channel = text_alternative
 
         if not isinstance(out_channel, discord.TextChannel) and\
-            not isinstance(out_channel, SlashContext):
+            not isinstance(out_channel, discord.ApplicationContext):
             # no way to output feedback
             return False
 

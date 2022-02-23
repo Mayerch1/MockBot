@@ -1,0 +1,13 @@
+2022-02-23 17:53:10,632:DEBUG:MockBot: ignoring TopGG, no Token
+2022-02-23 17:53:10,633:DEBUG:MockBot: ignoring BotsGG, no Token
+2022-02-23 17:53:10,633:DEBUG:MockBot: ignoring DBL, no Token
+2022-02-23 17:53:10,633:DEBUG:MockBot: ignoring Discords, no Token
+2022-02-23 17:53:10,634:DEBUG:MockBot: ignoring Disforge, no Token
+2022-02-23 17:53:10,634:DEBUG:MockBot: ignoring DLSpace, no Token
+2022-02-23 17:53:13,522:INFO:MockBot: Logged in as
+2022-02-23 17:53:13,523:INFO:MockBot: DevBot#8111
+2022-02-23 17:53:13,523:INFO:MockBot: 702511626795876433
+2022-02-23 17:53:13,523:INFO:MockBot: ----------------
+2022-02-23 17:53:13,524:INFO:MockBot: HelpModule loaded
+2022-02-23 17:53:13,524:INFO:MockBot: MockModule loaded
+2022-02-23 17:53:13,524:INFO:MockBot: ServerCountPost loaded
