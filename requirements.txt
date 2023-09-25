@@ -1,5 +1,5 @@
 tinydb 
-Pillow==9.5.0 
+Pillow
 Flask 
 waitress 
 web.py 
