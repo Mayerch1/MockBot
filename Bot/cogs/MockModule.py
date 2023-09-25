@@ -77,11 +77,14 @@ class MockModule(discord.Cog):
             message (discord.Message): message to mock
         """
 
+        # await ctx.defer()
         success = await perform_sponge(ctx, message, Consts.res_dir, Consts.mock_file)
 
         req_perms = discord.Permissions(manage_messages=True)
         if success and VerboseErrors.has_permission(req_perms, message.channel):
             await message.delete()
+        elif not success:
+            await ctx.respond('Failed to mock message', ephemeral=True)
         else:
             log.debug('skip message deletion, no permissions')
 
@@ -166,9 +169,9 @@ class MockModule(discord.Cog):
         if not await VerboseErrors.show_missing_perms('mock user', req_perms, ctx.channel, text_alternative=ctx):
             return
 
-        old_msg = await ctx.channel.history(limit=1).flatten()
-        if old_msg:
-            await self.mock_message(ctx, old_msg[0])
+        old_msgs = await ctx.channel.history(limit=1).flatten()
+        if old_msgs:
+            await self.mock_message(ctx, old_msgs[0])
         else:
             await ctx.respond('Failed to access message history', ephemeral=True)
 
