@@ -68,7 +68,7 @@ async def perform_sponge(ctx: discord.ApplicationContext, message: discord.Messa
 
     name_offset = 0
     for c in msg_list[1]:
-        name_offset += font_type.getsize(c)[0]
+        name_offset += int(font_type.getlength(c))
 
 
     # images do not have further text
@@ -83,7 +83,7 @@ async def perform_sponge(ctx: discord.ApplicationContext, message: discord.Messa
                 msg_list.append('')
 
             msg_list[-1] += c
-            msg_width += font_type.getsize(c)[0]
+            msg_width += int(font_type.getlength(c))
 
 
 
@@ -105,7 +105,7 @@ async def perform_sponge(ctx: discord.ApplicationContext, message: discord.Messa
 
         title_offset = 0
         for c in msg_list[0]:
-            title_offset += font_type.getsize(c)[0]
+            title_offset += int(font_type.getlength(c))
 
         x_offset = title_offset if title_offset > name_offset else name_offset
         offset = x_offset + 10, 10 # top, left margin 10
@@ -125,7 +125,7 @@ async def perform_sponge(ctx: discord.ApplicationContext, message: discord.Messa
 
 
         size = eff_width, eff_height
-        mock_image.thumbnail(size, Image.ANTIALIAS)
+        mock_image.thumbnail(size, Image.LANCZOS)
 
         img_sp.paste(mock_image, offset)
 

@@ -83,7 +83,7 @@ class MockModule(discord.Cog):
         req_perms = discord.Permissions(manage_messages=True)
         if success and VerboseErrors.has_permission(req_perms, message.channel):
             await message.delete()
-        elif not success:
+        elif not success and ctx:
             await ctx.respond('Failed to mock message', ephemeral=True)
         else:
             log.debug('skip message deletion, no permissions')
