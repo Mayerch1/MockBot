@@ -5,11 +5,9 @@ import traceback
 import discord
 
 from pathlib import Path
-from discord.ext.help import Help, HelpElement, HelpPage
 from discord.ext.servercount import ServerCount
 
-FEEDBACK_CHANNEL = 897465075219193916
-FEEDBACK_MENTION = 872107119988588566
+from lib.tinyConnector import TinyConnector
 
 logging.basicConfig(level=logging.INFO) # general 3rd party
 
@@ -29,8 +27,7 @@ log.addHandler(handler)
 token = os.getenv('BOT_TOKEN')
 token: str = os.getenv('BOT_TOKEN')
 intents = discord.Intents.none()
-intents.guilds = True
-intents.messages = True
+intents.guilds = True # non-privileged, required for on_guild_remove (data deletion)
 
 bot: discord.AutoShardedBot = discord.AutoShardedBot(intents=intents)
 
@@ -47,6 +44,28 @@ async def log_exception(ctx: discord.ApplicationContext, error: Exception):
         log.error(''.join(traceback.format_exception(*t)))
 
 
+def cleanup_removed_guilds():
+    """delete stored data of all guilds the bot is no longer part of
+       catches removals which happened while the bot was offline
+
+       only requires the (non-privileged) guilds intent
+    """
+    if bot.shard_ids is not None and bot.shard_count and len(bot.shard_ids) < bot.shard_count:
+        # this process only knows the guilds of its own shards
+        log.warning('process does not run all shards, skipping data cleanup')
+        return
+
+    joined = {g.id for g in bot.guilds} # includes unavailable guilds (outages)
+    if not joined:
+        # never wipe everything because of an empty/failed cache
+        log.warning('guild cache is empty, skipping data cleanup')
+        return
+
+    for g_id in TinyConnector.get_guild_ids() - joined:
+        TinyConnector.delete_guild(g_id)
+        log.info(f'deleted data of removed guild {g_id}')
+
+
 ###########
 # Eevents 
 ###########
@@ -57,7 +76,13 @@ async def on_ready():
     log.info(bot.user)
     log.info(bot.user.id)
     log.info('----------------')
-    config_help()
+    cleanup_removed_guilds()
+
+
+@bot.event
+async def on_guild_remove(guild: discord.Guild):
+    TinyConnector.delete_guild(guild.id)
+    log.info(f'removed from guild {guild.id}, deleted its data')
 
 
 @bot.event
@@ -85,31 +110,11 @@ def set_tokens():
     ServerCount.set_token_dir('tokens')
 
 
-def config_help():
-
-    custom_footer = 'If you like this bot, you can leave a vote at [top.gg](https://top.gg/bot/734829435844558999).\n'\
-                                'If you find a bug contact us on [Github](https://github.com/Mayerch1/MockBot) or join the support server.'
-
-    Help.init_help(bot, auto_detect_commands=True)
-
-    Help.set_default_footer(custom_footer)
-    Help.set_feedback(FEEDBACK_CHANNEL, FEEDBACK_MENTION)
-    Help.invite_permissions(
-        discord.Permissions(attach_files=True)
-    )
-    Help.support_invite('https://discord.gg/Xpyb9DX3D6')
-    Help.set_tos_file('legal/tos.md')
-    Help.set_privacy_file('legal/privacy.md')
-    Help.set_github_url('https://github.com/Mayerch1/MockBot')
-
-
-
 def main():
     for filename in os.listdir(Path(__file__).parent / 'cogs'):
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
 
-    bot.load_extension('discord.ext.help.help')
     bot.load_extension('discord.ext.servercount.servercount')
 
     set_tokens()

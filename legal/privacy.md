@@ -12,24 +12,14 @@ After completion of the command, no user data remains in memory.
 The service does not log command invocation*.
 
 **__Explicit data Collection__**
-Some commands will store user data after an explicit invocation by the user. These functionalities are (as of 16th December 2021) 
-* automock
-* automock excemption
+The service does not store any user information (as of 22nd November 2026). Previously stored data (in relation to the removed `automock` feature) have been deleted.
 
-__Automock__
-Once a user was added to the *automock* list, the ID of the user will be stored into a database linked to the guild the command was invoked on.
-Upon removal of the *automock* entry, the database entry is removed. It is not possible to see which users have been *automocked* in the past.
-
-__Automock Excemption__
-If a user was *automocked* and *opts-out* of the feature to prevent being *automocked*, his ID will be stored into a blacklist which is linked towards the 
-guild the *automock* was activated on.
-Upon deactivation of the excemption, the database entry is removed.
+__Server Settings__
+Settings changed with the `/settings` command are stored into a database linked to the guild the command was invoked on.
+These settings do not contain any user information.
 
 __Deletion of Data__
-All collected user information
-* User ID
-* linked guild ID
-will be deleted when the bot is removed from a guild, without possibility for recovery.
+All stored server settings will be deleted when the bot is removed from a guild, without possibility for recovery.
 
 *__**Error case**__
 In case a command causes an unexpected error, a so called `Stack-Trace` is dumped into log files.
