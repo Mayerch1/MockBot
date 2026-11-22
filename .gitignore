@@ -5,3 +5,4 @@ tokens/**
 token.txt
 servers.json
 logs/**
+.venv/
